@@ -32,7 +32,7 @@ const AttendanceSession = () => {
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionId, setSessionId] = useState('');
   const [qrCode, setQrCode] = useState('');
-  const [countdown, setCountdown] = useState(15);
+  const [countdown, setCountdown] = useState(5);
   const [attendedStudents, setAttendedStudents] = useState(0);
   const [totalStudents, setTotalStudents] = useState(32);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
