@@ -1,0 +1,121 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  STUDENT
+  TEACHER
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+// Core models
+model User {
+  id          String     @id @default(cuid())
+  email       String     @unique
+  password    String
+  role        UserRole
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  student     StudentProfile?
+  teacher     TeacherProfile?
+}
+
+model StudentProfile {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  fullName      String
+  rollNumber    String    @unique
+  department    String?
+  year          Int?
+  createdAt     DateTime  @default(now())
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id])
+  enrollments   Enrollment[]
+  attendance    AttendanceRecord[]
+}
+
+model TeacherProfile {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  fullName      String
+  employeeCode  String    @unique
+  department    String?
+  createdAt     DateTime  @default(now())
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id])
+  courses       Course[]
+}
+
+model Course {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  name          String
+  description   String?
+  semester      Int?
+  teacherId     String
+  createdAt     DateTime  @default(now())
+
+  // Relations
+  teacher       TeacherProfile @relation(fields: [teacherId], references: [id])
+  enrollments   Enrollment[]
+  sessions      AttendanceSession[]
+}
+
+model Enrollment {
+  id          String    @id @default(cuid())
+  studentId   String
+  courseId    String
+  enrolledAt  DateTime  @default(now())
+
+  // Relations
+  student     StudentProfile @relation(fields: [studentId], references: [id])
+  course      Course         @relation(fields: [courseId], references: [id])
+
+  @@unique([studentId, courseId])
+}
+
+model AttendanceSession {
+  id           String   @id @default(cuid())
+  courseId     String
+  date         DateTime @default(now())
+  topic        String?
+
+  // Relations
+  course       Course   @relation(fields: [courseId], references: [id])
+  records      AttendanceRecord[]
+}
+
+model AttendanceRecord {
+  id             String            @id @default(cuid())
+  sessionId      String
+  studentId      String
+  status         AttendanceStatus  @default(PRESENT)
+  markedAt       DateTime          @default(now())
+  remarks        String?
+
+  // Relations
+  session        AttendanceSession @relation(fields: [sessionId], references: [id])
+  student        StudentProfile    @relation(fields: [studentId], references: [id])
+
+  @@unique([sessionId, studentId])
+}
